@@ -2,21 +2,27 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class Album {
-  final int userId;
-  final int id;
-  final String title;
+  // final int userId;
+  // final int id;
+  // final String title;
+  final String tags;
+  final String previewURL;
 
   Album({
-    required this.userId,
-    required this.id,
-    required this.title,
+    required this.previewURL,
+    required this.tags
+    // required this.userId,
+    // required this.id,
+    // required this.title,
   });
 
   factory Album.fromJson(Map<String, dynamic> json) {
     return Album(
-      userId: json['userId'],
-      id: json['id'],
-      title: json['title'],
+      tags: json['tags'],
+      previewURL: json['previewURL']
+      // userId: json['userId'],
+      // id: json['id'],
+      // title: json['title'],
     );
   }
 
@@ -26,6 +32,6 @@ class Album {
 
   @override
   String toString() {
-    return 'Album{userId: $userId, id: $id, title: $title}';
+    return 'Album{tags: $tags, previewURL: $previewURL}';
   }
 }

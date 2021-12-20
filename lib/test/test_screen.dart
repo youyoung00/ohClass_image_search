@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_search/model/album.dart';
 
@@ -11,17 +12,19 @@ class TestScreen extends StatefulWidget {
 }
 
 class _TestScreenState extends State<TestScreen> {
-  Future<List<Album>> fetchAlbums() async {
-    final response = await http
-        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums'));
 
+  String keyword = 'iphone';
+  // final RegExp _regExp = RegExp(r'[\uac00-\ud7af]', unicode: true);
+
+  final TextEditingController textEditingController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  Future<List<Album>> fetchAlbums() async {
+    final response = await http.get(Uri.parse(
+        'https://pixabay.com/api/?key=24806198-1f9550a3fd92fcce8b0067dc7&q=$keyword&image_type=photo&pretty=true'));
     if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      return Album.listToAlbums(jsonDecode(response.body));
+      return Album.listToAlbums(jsonDecode(response.body)['hits']);
     } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
       throw Exception('Failed to load album');
     }
   }
@@ -37,7 +40,9 @@ class _TestScreenState extends State<TestScreen> {
 
   Future<Album> fetchAlbum() async {
     final response = await http
-        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
+        // .get(Uri.parse('https://jsonplaceholder.typicode.com/albums/1'));
+        .get(Uri.parse(
+            'https://pixabay.com/api/?key=24806198-1f9550a3fd92fcce8b0067dc7&q=iphone&image_type=photo&pretty=true'));
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
@@ -69,66 +74,117 @@ class _TestScreenState extends State<TestScreen> {
   // });
 
   @override
+  void initState() {
+    // TODO: implement initState
+    textEditingController.addListener(() {
+      print(textEditingController.text);
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    textEditingController.dispose();
+    super.dispose();
+  }
+
+
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Network Sample"),
       ),
-      body: Column(
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-            },
-            child: const Text('album 가져오기'),
-          ),
-          FutureBuilder<Album>(
-            future: fetchAlbum(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return const Center(child: Text('네트워크 에러!'));
-              }
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
+      body: Form(
+        child: Column(
+          children: [
+            TextFormField(
+              key: _formKey,
+              controller: textEditingController,
+              // inputFormatters: [
+              //   FilteringTextInputFormatter.allow(_regExp),
+              // ],
+              // focusNode: FocusNode(),
+              keyboardType: TextInputType.text,
+              // onChanged: (text) {
+              //   _streamSearch.add(text);
+              // },
+              validator: (value){
+                if(value?.isEmpty ?? false){
+                  return '검색어가 입력되지 않았습니다.';
+                }
+                return null;
+              },
+              decoration: InputDecoration(
+                  hintText: '검색어를 입력하세요',
+                  border: InputBorder.none,
+                  icon: IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () {
+                      setState(() {
+                        keyword = textEditingController.text;
+                        print(keyword);
+                      });
+                    },
+                  )
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {});
+              },
+              child: const Text('album 가져오기'),
+            ),
+            FutureBuilder<Album>(
+              future: fetchAlbum(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('네트워크 에러!'));
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              if (!snapshot.hasData) {
-                return const Center(child: Text('데이터가 없습니다!'));
-              }
+                if (!snapshot.hasData) {
+                  return const Center(child: Text('데이터가 없습니다!'));
+                }
 
-              final Album album = snapshot.data!;
+                final Album album = snapshot.data!;
 
-              return _buildBody(album);
-            },
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-            },
-            child: const Text('album 들 가져오기'),
-          ),
-          FutureBuilder<List<Album>>(
-            future: fetchAlbums(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                print(snapshot.error.toString());
-                return const Center(child: Text('네트워크 에러!'));
-              }
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
+                return _buildBody(album);
+              },
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {});
+              },
+              child: const Text('album 들 가져오기'),
+            ),
+            FutureBuilder<List<Album>>(
+              future: fetchAlbums(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  print(snapshot.error.toString());
+                  return const Center(child: Text('네트워크 에러!'));
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              if (!snapshot.hasData) {
-                return const Center(child: Text('데이터가 없습니다!'));
-              }
+                if (!snapshot.hasData) {
+                  return const Center(child: Text('데이터가 없습니다!'));
+                }
 
-              final List<Album> albums = snapshot.data!;
+                final List<Album> albums = snapshot.data!;
 
-              return _buildAlbums(albums);
-              // _buildBody(album);
-            },
-          ),
-        ],
+                return _buildAlbums(albums);
+                // _buildBody(album);
+              },
+            ),
+          ],
+        ),
       ),
       // body: _album == null
       //     ? const Center(child: CircularProgressIndicator())
@@ -142,7 +198,7 @@ class _TestScreenState extends State<TestScreen> {
   Widget _buildBody(Album album) {
     return Text(
       // '${album.id} : ${_album.toString()}',
-      '${album.id} : ${album.toString()}',
+      '${album.tags} : ${album.toString()}',
       style: const TextStyle(fontSize: 30),
     );
   }
@@ -153,7 +209,11 @@ class _TestScreenState extends State<TestScreen> {
         itemCount: albums.length,
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text(albums[index].title),
+            title: Text(albums[index].tags),
+            leading: Image.network(
+              albums[index].previewURL,
+              fit: BoxFit.cover,
+            ),
           );
         },
       ),
