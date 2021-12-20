@@ -11,6 +11,21 @@ class TestScreen extends StatefulWidget {
 }
 
 class _TestScreenState extends State<TestScreen> {
+  Future<List<Album>> fetchAlbums() async {
+    final response = await http
+        .get(Uri.parse('https://jsonplaceholder.typicode.com/albums'));
+
+    if (response.statusCode == 200) {
+      // If the server did return a 200 OK response,
+      // then parse the JSON.
+      return Album.listToAlbums(jsonDecode(response.body));
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
+  }
+
   // Album? _album;
   //
   // Future<void> init() async {
@@ -47,12 +62,11 @@ class _TestScreenState extends State<TestScreen> {
   //
   //   init();
   // }
-    // fetchAlbum().then((album) {
-    //   setState(() {
-    //     _album = album;
-    //   });
-    // });
-
+  // fetchAlbum().then((album) {
+  //   setState(() {
+  //     _album = album;
+  //   });
+  // });
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +77,7 @@ class _TestScreenState extends State<TestScreen> {
       body: Column(
         children: [
           ElevatedButton(
-            onPressed: (){
+            onPressed: () {
               setState(() {});
             },
             child: const Text('album 가져오기'),
@@ -88,10 +102,31 @@ class _TestScreenState extends State<TestScreen> {
             },
           ),
           ElevatedButton(
-            onPressed: (){
+            onPressed: () {
               setState(() {});
             },
             child: const Text('album 들 가져오기'),
+          ),
+          FutureBuilder<List<Album>>(
+            future: fetchAlbums(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                print(snapshot.error.toString());
+                return const Center(child: Text('네트워크 에러!'));
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (!snapshot.hasData) {
+                return const Center(child: Text('데이터가 없습니다!'));
+              }
+
+              final List<Album> albums = snapshot.data!;
+
+              return _buildAlbums(albums);
+              // _buildBody(album);
+            },
           ),
         ],
       ),
@@ -104,11 +139,33 @@ class _TestScreenState extends State<TestScreen> {
     );
   }
 
-  Widget _buildBody(Album album){
-    return  Text(
+  Widget _buildBody(Album album) {
+    return Text(
       // '${album.id} : ${_album.toString()}',
       '${album.id} : ${album.toString()}',
       style: const TextStyle(fontSize: 30),
     );
+  }
+
+  Widget _buildAlbums(List<Album> albums) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: albums.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(albums[index].title),
+          );
+        },
+      ),
+    );
+    // return Expanded(
+    //   child: ListView(
+    //     children: albums
+    //         .map((e) => ListTile(
+    //               title: Text(e.title),
+    //             ))
+    //         .toList(),
+    //   ),
+    // );
   }
 }

@@ -20,6 +20,10 @@ class Album {
     );
   }
 
+  static List<Album> listToAlbums(List jsonlist) {
+    return jsonlist.map((e) => Album.fromJson(e)).toList();
+  }
+
   @override
   String toString() {
     return 'Album{userId: $userId, id: $id, title: $title}';
