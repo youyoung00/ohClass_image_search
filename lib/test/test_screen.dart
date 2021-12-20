@@ -60,24 +60,40 @@ class _TestScreenState extends State<TestScreen> {
       appBar: AppBar(
         title: const Text("Network Sample"),
       ),
-      body: FutureBuilder<Album>(
-        future: fetchAlbum(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('네트워크 에러!'));
-          }
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: (){
+              setState(() {});
+            },
+            child: const Text('album 가져오기'),
+          ),
+          FutureBuilder<Album>(
+            future: fetchAlbum(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Center(child: Text('네트워크 에러!'));
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (!snapshot.hasData) {
-            return const Center(child: Text('데이터가 없습니다!'));
-          }
+              if (!snapshot.hasData) {
+                return const Center(child: Text('데이터가 없습니다!'));
+              }
 
-          final Album album = snapshot.data!;
+              final Album album = snapshot.data!;
 
-          return _buildBody(album);
-        },
+              return _buildBody(album);
+            },
+          ),
+          ElevatedButton(
+            onPressed: (){
+              setState(() {});
+            },
+            child: const Text('album 들 가져오기'),
+          ),
+        ],
       ),
       // body: _album == null
       //     ? const Center(child: CircularProgressIndicator())
